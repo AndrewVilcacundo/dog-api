@@ -14,29 +14,33 @@ class ApiService {
 
       // Assuming the response contains breed names
       Map<String, dynamic> breeds = data['message'];
-      breeds.forEach((breed, subBreeds) {
-        if (subBreeds.isEmpty) {
-          pokemonList.add(Pokemon(
-            name: breed,
-            url: '', // You can set a URL if needed
-            descripcion: '', // You can set a description if needed
-            imagen: '',
-          ));
-        } else {
-          subBreeds.forEach((subBreed) {
-            pokemonList.add(Pokemon(
-              name: '$breed $subBreed',
-              url: '', // You can set a URL if needed
-              descripcion: '', // You can set a description if needed
-              imagen: '',
-            ));
-          });
-        }
-      });
+      for (var breed in breeds.keys) {
+        var breedDetails = await fetchBreedDetails(breed);
+        pokemonList.add(breedDetails);
+      }
 
       return pokemonList;
     } else {
       throw Exception('Failed to load Pokémon');
+    }
+  }
+
+  Future<Pokemon> fetchBreedDetails(String breed) async {
+    // Fetch breed description and image
+    final response = await http.get(Uri.parse('$baseUrl/breed/$breed/images/random'));
+    final descriptionResponse = await http.get(Uri.parse('https://example.com/breed/$breed/description'));
+
+    if (response.statusCode == 200 && descriptionResponse.statusCode == 200) {
+      final imageData = json.decode(response.body);
+      final descriptionData = json.decode(descriptionResponse.body);
+      return Pokemon(
+        name: breed,
+        url: '',
+        descripcion: descriptionData['description'] ?? '',
+        imagen: imageData['message'] ?? '',
+      );
+    } else {
+      throw Exception('Failed to load breed details');
     }
   }
 }

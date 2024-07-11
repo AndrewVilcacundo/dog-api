@@ -1,55 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'providers/pokemon_provider.dart';
-import 'models/pokemon.dart';
+import 'dart:math';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => PokemonProvider()),
-      ],
-      child: MaterialApp(
-        title: 'Flutter PokeAPI Demo',
-        home: PokemonListScreen(),
+    return MaterialApp(
+      title: 'Consumiendo el API Dogs',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: DogImagePage(),
     );
   }
 }
 
-class PokemonListScreen extends StatelessWidget {
+class DogImagePage extends StatefulWidget {
+  @override
+  _DogImagePageState createState() => _DogImagePageState();
+}
+
+class _DogImagePageState extends State<DogImagePage> {
+  final List<int> statusCodes = [100, 200, 300, 400, 404, 500, 502, 503, 504];
+  String imageUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRandomDogImage();
+  }
+
+  void fetchRandomDogImage() {
+    final random = Random();
+    final statusCode = statusCodes[random.nextInt(statusCodes.length)];
+    setState(() {
+      imageUrl = 'https://http.dog/$statusCode.jpg';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final pokemonProvider = Provider.of<PokemonProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lista de Razas de Perros'),
+        title: Text('API DOGS'),
       ),
-      body: pokemonProvider.isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: pokemonProvider.pokemonList.length,
-              itemBuilder: (context, index) {
-                Pokemon pokemon = pokemonProvider.pokemonList[index];
-                return ListTile(
-                  title: Text(pokemon.name),
-                  onTap: () {
-                    // Add navigation to a Pokémon detail screen here if needed
-                  },
-                );
-              },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    width: 400, // Ajusta el ancho de la imagen
+                    height: 400, // Ajusta la altura de la imagen
+                    fit: BoxFit.cover, // Ajusta la imagen dentro del cuadro
+                  )
+                : CircularProgressIndicator(),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: fetchRandomDogImage,
+              child: Text('Cargar otra imagen de perro'),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          pokemonProvider.fetchPokemon();
-        },
-        child: Icon(Icons.refresh),
+          ],
+        ),
       ),
     );
   }
